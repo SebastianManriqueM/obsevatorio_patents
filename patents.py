@@ -1,6 +1,6 @@
 import requests
 import json
-
+#comentarioAleatorio
 
 class Patents():
     def __init__(self):
