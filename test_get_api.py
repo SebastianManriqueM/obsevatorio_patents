@@ -14,16 +14,25 @@ def get_nmax_param_y_grouped( df, selected_grouping='assignee_country', item_to_
         other_items_legend = 'ROO'
 
     top_n_key                  = df[ selected_grouping ].value_counts()[:n_top].keys()
-    df_n_patents               = df.groupby( ['app_date', selected_grouping] )[item_to_count].sum().unstack( fill_value=0 ).resample( f'{Y_span}Y' ).sum()
+    df_n_patents               = df.groupby( ['app_date', selected_grouping] )[item_to_count].sum().unstack( fill_value=0 ).resample( f'{Y_span}Y', closed='left' ).sum()
     df_n_patents['Total']      = df_n_patents.sum(axis=1)
+    
     df_filt                    = df_n_patents[ top_n_key ]
     df_filt[other_items_legend]= df_n_patents['Total'] - df_filt.sum(axis=1)
     new_col_index = []
     
-    for i in range(len(df_filt.index)-1):
-        new_col_index.append( df_filt.index[i].strftime("%Y")[2:] +"-"+ df_filt.index[i+1].strftime("%Y")[2:] )
+    for i in range(len(df_filt.index)):
+        ini = str(int(df_filt.index[i].strftime("%Y")[2:])-Y_span+1)
+        fin = str(int(df_filt.index[i].strftime("%Y")[2:])+1)
+        if fin == '100':
+            fin = '00'
+
+        if ini == '0':
+            ini = '00'
+        new_col_index.append( ini +"-"+ fin )
     
-    new_col_index.append( df_filt.index[i+1].strftime("%Y")[2:] +"-"+ str(int(df_filt.index[i+1].strftime("%Y")[2:])+Y_span) )
+    #new_col_index.append( df_filt.index[i+1].strftime("%Y")[2:] +"-"+ str(int(df_filt.index[i+1].strftime("%Y")[2:])+Y_span) )
+    #df_filt               = df_filt.drop(['1980-12-31'],axis=0)
     df_filt.insert(0, "Yspan", new_col_index, True)
     
     return df_filt.set_index("Yspan")
@@ -106,9 +115,9 @@ def iterate_all_cat( d_l_pb_patents_code, d_user_dates, user_back_data_filt  ):
 d_user_dates = {"ini": { "year": '1980', #usar formato de data melhor
                 "month" : '01', 
                 "day"   : '01' },
-        "fin": { "year": '2020', 
-                "month": '01', 
-                "day"  : '01' },
+        "fin": { "year": '2022', 
+                "month": '12', 
+                "day"  : '31' },
         }
 d_l_pb_patents_code = {
     "Automotive":                      [ "H01M2/1072" ],#not H01M6/,  H01M4/06
